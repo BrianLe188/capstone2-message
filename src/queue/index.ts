@@ -8,6 +8,8 @@ const queue = async ({
   channel: Channel;
   database: Db;
 }) => {
+  const messageCollection = database.collection("messages");
+
   const messageExchange = "message";
   const messageQueue = "message_queue";
 
@@ -17,7 +19,8 @@ const queue = async ({
 
   channel.consume(messageQueue, (msg) => {
     if (msg?.fields.routingKey === "write") {
-      console.log(JSON.parse(msg.content.toString()));
+      const data = JSON.parse(msg.content.toString());
+      messageCollection.insertOne({ data, like: 0, dislike: 0 });
     }
   });
 };
