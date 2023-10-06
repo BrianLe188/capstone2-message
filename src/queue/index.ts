@@ -17,12 +17,18 @@ const queue = async ({
   await channel.assertQueue(messageQueue);
   await channel.bindQueue(messageQueue, messageExchange, "write");
 
-  channel.consume(messageQueue, (msg) => {
-    if (msg?.fields.routingKey === "write") {
-      const data = JSON.parse(msg.content.toString());
-      messageCollection.insertOne({ data, like: 0, dislike: 0 });
+  channel.consume(
+    messageQueue,
+    (msg) => {
+      if (msg?.fields.routingKey === "write") {
+        const data = JSON.parse(msg.content.toString());
+        messageCollection.insertOne({ data, like: 0, dislike: 0 });
+      }
+    },
+    {
+      noAck: true,
     }
-  });
+  );
 };
 
 export default queue;
