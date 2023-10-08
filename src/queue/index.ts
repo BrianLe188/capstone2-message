@@ -22,7 +22,7 @@ const queue = async ({
     (msg) => {
       if (msg?.fields.routingKey === "write") {
         const data = JSON.parse(msg.content.toString());
-        messageCollection.insertOne({ data, like: 0, dislike: 0 });
+        messageCollection.insertOne({ ...data, like: 0, dislike: 0 });
       }
     },
     {
