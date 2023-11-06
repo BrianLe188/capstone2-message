@@ -1,0 +1,20 @@
+syntax = 'proto3';
+
+package role;
+
+message Role {
+  optional string id = 1;
+  string name = 2;
+}
+
+message UpdateRole {
+  string id = 1;
+  Role body = 2;
+}
+
+message RoleResponse {
+  oneof response {
+    Role role = 1;
+    string error = 2;
+  }
+}

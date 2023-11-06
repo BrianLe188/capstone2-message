@@ -1,0 +1,61 @@
+syntax = 'proto3';
+
+package auth;
+
+import './user.proto';
+import './token.proto';
+import './role.proto';
+
+service Auth {
+  rpc Default(GreetRequest) returns (GreetResponse) {}
+
+  rpc CreateUser(UserRole) returns (user.UserResponse) {}
+  rpc UpdateUser(user.UpdateUser) returns (user.UserResponse) {}
+  rpc DeleteUser(Target) returns (Message) {}
+  rpc IsExistUser(user.Email) returns (Exist) {}
+  rpc Login(user.Login) returns (token.TokenResponse) {}
+  rpc GetAllUser(user.UserOptions) returns (user.UsersResponse) {}
+  rpc GetUserById(user.UserOptions) returns (user.UserResponse) {}
+
+  rpc CreateRole(role.Role) returns (role.RoleResponse) {}
+  rpc UpdateRole(role.UpdateRole) returns (role.RoleResponse) {}
+  rpc DeleteRole(Target) returns (Message) {}
+
+  rpc VerifyToken(Token) returns (UserFromToken) {}
+}
+
+message Token {
+  string token = 1;
+}
+
+message UserFromToken {
+  user.User data = 1;
+}
+
+message UserRole {
+  user.User user = 1;
+  role.Role role = 2;
+}
+
+message RequestEmpty {}
+
+message Exist {
+  bool exist = 1;
+}
+
+message Target {
+  string id = 1;
+}
+
+message Message {
+  string message = 1;
+}
+
+message GreetRequest {
+  string name = 1;
+  string language_code = 2;
+}
+
+message GreetResponse {
+  string greeting = 1;
+}

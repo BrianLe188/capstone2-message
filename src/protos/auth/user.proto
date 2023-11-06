@@ -1,0 +1,60 @@
+syntax = 'proto3';
+
+package user;
+
+import './role.proto';
+import './token.proto';
+
+message User {
+  optional string id = 1;
+  string email = 2;
+  string password = 3;
+  string fullName = 4;
+  optional role.Role role = 5;
+  optional string socket = 6;
+  optional string ip = 7;
+  optional token.Token token = 8;
+}
+
+message UserOptions {
+  optional string id = 1;
+  optional string email = 2;
+  optional string password = 3;
+  optional string fullName = 4;
+  optional role.Role role = 5;
+  optional string socket = 6;
+  optional string ip = 7;
+  optional token.Token token = 8;
+}
+
+message Users {
+  repeated User data = 1;
+}
+
+message Login {
+  string email = 1;
+  string password = 2;
+}
+
+message Email {
+  string email = 1;
+}
+
+message UpdateUser {
+  string id = 1;
+  User body = 2;
+}
+
+message UserResponse {
+  oneof response {
+    User user = 1;
+    string error = 2;
+  }
+}
+
+message UsersResponse {
+  oneof response {
+    Users users = 1;
+    string error = 2;
+  }
+}
