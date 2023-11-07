@@ -1,5 +1,5 @@
 import { Channel, Message } from "amqplib";
-import { Db } from "mongodb";
+import { Db, ObjectId } from "mongodb";
 import authService from "../services/auth/auth.service";
 
 const queue = async ({
@@ -35,7 +35,7 @@ const queue = async ({
       switch (msg?.fields.routingKey) {
         case "write": {
           const data = JSON.parse(msg.content.toString());
-          messageCollection.insertOne({ ...data, like: 0, dislike: 0 });
+          messageCollection.insertMany(data);
           break;
         }
       }
@@ -88,7 +88,7 @@ const queue = async ({
           );
           channel.sendToQueue(
             sendBackRoomsQueue,
-            Buffer.from(JSON.stringify(mappedRooms || []))
+            Buffer.from(JSON.stringify({ rooms: mappedRooms || [], me }))
           );
           break;
         }
@@ -103,27 +103,24 @@ const queue = async ({
     connectRoomQueue,
     async (msg) => {
       if (msg) {
-        const { sender, receiver, roomId } = JSON.parse(msg.content.toString());
-        let room: any = await roomCollection.findOne(
-          {
-            // members: {
-            //   $all: [sender, receiver],
-            // },
-            $or: [
-              { _id: roomId },
-              {
+        const { sender, receiver, roomId, back, extend } = JSON.parse(
+          msg.content.toString()
+        );
+        const filter = {
+          ...(roomId ? { _id: new ObjectId(roomId) } : {}),
+          ...(sender && receiver
+            ? {
                 members: {
                   $all: [sender, receiver],
                 },
-              },
-            ],
+              }
+            : {}),
+        };
+        let room: any = await roomCollection.findOne(filter, {
+          projection: {
+            _id: 1,
           },
-          {
-            projection: {
-              _id: 1,
-            },
-          }
-        );
+        });
         if (!room) {
           room = await roomCollection
             .insertOne({
@@ -136,7 +133,7 @@ const queue = async ({
         }
         channel.sendToQueue(
           sendBackRoomQueue,
-          Buffer.from(JSON.stringify(room))
+          Buffer.from(JSON.stringify({ room, back, extend, sender }))
         );
       }
       channel.ack(msg as Message);
