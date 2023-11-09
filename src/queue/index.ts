@@ -32,12 +32,9 @@ const queue = async ({
   channel.consume(
     messageQueue,
     (msg) => {
-      switch (msg?.fields.routingKey) {
-        case "write": {
-          const data = JSON.parse(msg.content.toString());
-          messageCollection.insertMany(data);
-          break;
-        }
+      if (msg) {
+        const data = JSON.parse(msg.content.toString());
+        messageCollection.insertMany(data);
       }
     },
     {
@@ -48,54 +45,52 @@ const queue = async ({
   channel.consume(
     roomQueue,
     async (msg) => {
-      switch (msg?.fields.routingKey) {
-        case "get_my_room": {
-          const { me } = JSON.parse(msg.content.toString());
-          const rooms = await roomCollection
-            .find({
-              members: {
-                $in: [me],
-              },
-            })
-            .toArray();
-          const mappedRooms = await Promise.all(
-            rooms.map(async (item) => {
-              const notme = await Promise.all(
-                item.members.map(async (mem: string) => {
-                  if (mem === me) {
-                    return null;
+      if (msg) {
+        const { me } = JSON.parse(msg.content.toString());
+        const rooms = await roomCollection
+          .find({
+            members: {
+              $in: [me],
+            },
+          })
+          .toArray();
+        const mappedRooms = await Promise.all(
+          rooms.map(async (item) => {
+            const notme = await Promise.all(
+              item.members.map(async (mem: string) => {
+                if (mem === me) {
+                  return null;
+                }
+                const memEntity = await authService.getUserById({
+                  params: { id: mem },
+                });
+                return memEntity;
+              })
+            );
+            return {
+              ...item,
+              realName: notme
+                .reduce((prev, next) => {
+                  let result = prev;
+                  if (next?.fullName) {
+                    result = result + next?.fullName + " ";
                   }
-                  const memEntity = await authService.getUserById({
-                    params: { id: mem },
-                  });
-                  return memEntity;
-                })
-              );
-              return {
-                ...item,
-                realName: notme
-                  .reduce((prev, next) => {
-                    let result = prev;
-                    if (next?.fullName) {
-                      result = result + next?.fullName + " ";
-                    }
-                    return result;
-                  }, "")
-                  .trim(),
-                members: notme,
-              };
-            })
-          );
-          channel.sendToQueue(
-            sendBackRoomsQueue,
-            Buffer.from(JSON.stringify({ rooms: mappedRooms || [], me }))
-          );
-          break;
-        }
+                  return result;
+                }, "")
+                .trim(),
+              members: notme,
+            };
+          })
+        );
+        channel.sendToQueue(
+          sendBackRoomsQueue,
+          Buffer.from(JSON.stringify({ rooms: mappedRooms || [], me }))
+        );
       }
+      channel.ack(msg as Message);
     },
     {
-      noAck: true,
+      noAck: false,
     }
   );
 
@@ -106,17 +101,20 @@ const queue = async ({
         const { sender, receiver, roomId, back, extend } = JSON.parse(
           msg.content.toString()
         );
-        const filter = {
-          ...(roomId ? { _id: new ObjectId(roomId) } : {}),
-          ...(sender && receiver
-            ? {
-                members: {
-                  $all: [sender, receiver],
-                },
-              }
-            : {}),
-        };
-        let room: any = await roomCollection.findOne(filter, {
+        let filter = {};
+        let room: any = null;
+        if (roomId) {
+          filter = {
+            _id: new ObjectId(roomId),
+          };
+        } else {
+          filter = {
+            members: {
+              $all: [sender, receiver],
+            },
+          };
+        }
+        room = await roomCollection.findOne(filter, {
           projection: {
             _id: 1,
           },
