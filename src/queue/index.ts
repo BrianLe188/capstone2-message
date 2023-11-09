@@ -12,18 +12,14 @@ const queue = async ({
   const messageCollection = database.collection("messages");
   const roomCollection = database.collection("rooms");
 
-  const messageExchange = "message";
   const messageQueue = "message_queue";
   const connectRoomQueue = "connect_room_queue";
   const sendBackRoomQueue = "send_back_room_queue";
   const roomQueue = "room_queue";
   const sendBackRoomsQueue = "send_back_rooms_queue";
 
-  await channel.assertExchange(messageExchange, "direct");
   await channel.assertQueue(messageQueue);
-  await channel.bindQueue(messageQueue, messageExchange, "write");
   await channel.assertQueue(roomQueue);
-  await channel.bindQueue(roomQueue, messageExchange, "get_my_room");
 
   await channel.assertQueue(connectRoomQueue);
   await channel.assertQueue(sendBackRoomQueue);
@@ -34,7 +30,7 @@ const queue = async ({
     (msg) => {
       if (msg) {
         const data = JSON.parse(msg.content.toString());
-        messageCollection.insertMany(data);
+        messageCollection.insertOne(data);
       }
     },
     {
