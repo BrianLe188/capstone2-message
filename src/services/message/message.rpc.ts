@@ -8,8 +8,15 @@ const messageCollection = database.collection("messages");
 const GetMessages = async (call: any, callback: any) => {
   try {
     const { target, sender } = call.request;
+
     let room = await roomCollection.findOne({
-      _id: new ObjectId(target),
+      ...(target.length <= 24
+        ? { _id: new ObjectId(target) }
+        : {
+            members: {
+              $all: [sender, target],
+            },
+          }),
     });
     if (!room) {
       room = await roomCollection.findOne({
@@ -25,6 +32,7 @@ const GetMessages = async (call: any, callback: any) => {
       .toArray();
     callback(null, { messages: { data: messages } });
   } catch (error) {
+    console.log(error);
     callback(null, { error });
   }
 };
