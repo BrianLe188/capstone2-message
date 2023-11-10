@@ -1,0 +1,45 @@
+syntax = 'proto3';
+
+package message;
+
+service Message {
+  rpc GetMessages(Target) returns (MessagesResponse) {}
+}
+
+message MessageEntity {
+  optional string _id = 1;
+  optional string content = 2;
+  optional string type = 3;
+  optional string room = 4;
+  optional string sender = 5;
+  optional string createdAt = 6;
+  optional string updatedAt = 7;
+}
+
+message Target {
+  string target = 1;
+  string sender = 2;
+}
+
+message Messages {
+  repeated MessageEntity data = 1;
+}
+
+message UpdateMessage {
+  string id = 1;
+  MessageEntity body = 2;
+}
+
+message MessageResponse {
+  oneof response {
+    MessageEntity message = 1;
+    string error = 2;
+  }
+}
+
+message MessagesResponse {
+  oneof response {
+    Messages messages = 1;
+    string error = 2;
+  }
+}
