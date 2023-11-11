@@ -110,20 +110,24 @@ const queue = async ({
             },
           };
         }
-        room = await roomCollection.findOne(filter, {
-          projection: {
-            _id: 1,
-          },
-        });
-        if (!room) {
-          room = await roomCollection
-            .insertOne({
-              name: `${sender}_${receiver}`,
-              members: [sender, receiver],
-            })
-            .then((data) => ({
-              _id: data.insertedId,
-            }));
+        try {
+          room = await roomCollection.findOne(filter, {
+            projection: {
+              _id: 1,
+            },
+          });
+          if (!room) {
+            room = await roomCollection
+              .insertOne({
+                name: `${sender}_${receiver}`,
+                members: [sender, receiver],
+              })
+              .then((data) => ({
+                _id: data.insertedId,
+              }));
+          }
+        } catch (error) {
+          console.log(error);
         }
         channel.sendToQueue(
           sendBackRoomQueue,
