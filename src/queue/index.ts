@@ -11,19 +11,34 @@ const queue = async ({
 }) => {
   const messageCollection = database.collection("messages");
   const roomCollection = database.collection("rooms");
+  const QACollection = database.collection("qa");
 
   const messageQueue = "message_queue";
   const connectRoomQueue = "connect_room_queue";
   const sendBackRoomQueue = "send_back_room_queue";
   const roomQueue = "room_queue";
   const sendBackRoomsQueue = "send_back_rooms_queue";
+  const QAQueue = "qa_queue";
 
   await channel.assertQueue(messageQueue);
   await channel.assertQueue(roomQueue);
-
   await channel.assertQueue(connectRoomQueue);
   await channel.assertQueue(sendBackRoomQueue);
   await channel.assertQueue(sendBackRoomsQueue);
+  await channel.assertQueue(QAQueue);
+
+  channel.consume(
+    QAQueue,
+    (msg) => {
+      if (msg) {
+        const data = JSON.parse(msg.content.toString());
+        QACollection.insertOne(data);
+      }
+    },
+    {
+      noAck: true,
+    }
+  );
 
   channel.consume(
     messageQueue,
