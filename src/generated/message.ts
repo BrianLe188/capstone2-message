@@ -9,11 +9,14 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 
 export interface ProtoGrpcType {
   message: {
+    Conversation: MessageTypeDefinition
     Message: SubtypeConstructor<typeof grpc.Client, _message_MessageClient> & { service: _message_MessageDefinition }
     MessageEntity: MessageTypeDefinition
+    MessageR: MessageTypeDefinition
     MessageResponse: MessageTypeDefinition
     Messages: MessageTypeDefinition
     MessagesResponse: MessageTypeDefinition
+    RequestEmpty: MessageTypeDefinition
     Target: MessageTypeDefinition
     UpdateMessage: MessageTypeDefinition
   }

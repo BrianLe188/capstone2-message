@@ -4,6 +4,18 @@ import { client } from "../../mongodb";
 const database = client.db("capstone2-message");
 const roomCollection = database.collection("rooms");
 const messageCollection = database.collection("messages");
+const QACollection = database.collection("qa");
+
+const CreateConversation = async (call: any, callback: any) => {
+  try {
+    const data = call.request;
+    QACollection.insertOne(data);
+    callback(null, { message: "Done" });
+  } catch (error) {
+    console.log(error);
+    callback(null, { error });
+  }
+};
 
 const GetMessages = async (call: any, callback: any) => {
   try {
@@ -39,6 +51,7 @@ const GetMessages = async (call: any, callback: any) => {
 
 const messageRPC = {
   GetMessages,
+  CreateConversation,
 };
 
 export default messageRPC;

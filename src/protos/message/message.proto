@@ -4,6 +4,12 @@ package message;
 
 service Message {
   rpc GetMessages(Target) returns (MessagesResponse) {}
+  rpc CreateConversation(Conversation) returns (MessageR) {}
+}
+
+message Conversation {
+  string question = 1;
+  string answer = 2;
 }
 
 message MessageEntity {
@@ -15,6 +21,12 @@ message MessageEntity {
   optional string createdAt = 6;
   optional string updatedAt = 7;
 }
+
+message MessageR {
+  string message = 1;
+}
+
+message RequestEmpty {}
 
 message Target {
   string target = 1;
